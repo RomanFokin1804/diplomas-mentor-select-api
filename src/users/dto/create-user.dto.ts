@@ -1,4 +1,7 @@
+import { UserRole } from '../enum/user-role.enum';
+
 export class CreateUserDto {
-  readonly title: string;
-  readonly price: number;
+  readonly login: string;
+  readonly password: string;
+  readonly role: UserRole;
 }
