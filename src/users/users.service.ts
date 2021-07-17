@@ -69,4 +69,18 @@ export class UsersService {
       return e;
     }
   }
+
+  async getByLogin(login: string): Promise<User> {
+    try {
+      const res = await this.usersRepository.findOne({ login });
+      console.log(res);
+      return res;
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  /*async signUp(createUserDto: CreateUserDto): Promise<User> {
+
+  }*/
 }

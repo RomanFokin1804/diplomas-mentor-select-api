@@ -3,11 +3,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
-import { User } from './users/entity/user.entity';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [UsersModule, TypeOrmModule.forRoot()],
+  imports: [UsersModule, TypeOrmModule.forRoot(), AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
+
+// create cron for remove not-approved user
