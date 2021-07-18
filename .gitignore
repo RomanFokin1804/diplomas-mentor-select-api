@@ -35,4 +35,4 @@ lerna-debug.log*
 
 #config
 ormconfig.json
-src/config/config.ts
+config/email.config.json

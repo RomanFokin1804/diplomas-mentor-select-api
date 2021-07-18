@@ -5,9 +5,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Auth } from './entity/auth.entity';
 import { UsersModule } from 'src/users/users.module';
 import { ApprovedList } from './entity/approved-list.entity';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Auth, ApprovedList]), UsersModule],
+  imports: [
+    TypeOrmModule.forFeature([Auth, ApprovedList]),
+    UsersModule,
+    EmailModule,
+  ],
   exports: [TypeOrmModule],
   providers: [AuthService],
   controllers: [AuthController],

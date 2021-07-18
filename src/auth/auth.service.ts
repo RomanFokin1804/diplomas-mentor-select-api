@@ -7,7 +7,7 @@ import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { ApprovedList } from './entity/approved-list.entity';
 import { Auth } from './entity/auth.entity';
-import { ConfigService } from '@nestjs/config';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +17,7 @@ export class AuthService {
     @InjectRepository(ApprovedList)
     private approvedRepository: Repository<ApprovedList>,
     private usersService: UsersService,
+    private emailService: EmailService,
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
@@ -44,6 +45,7 @@ export class AuthService {
     const link = `${mainUrl}/auth/approved?code=${code}`;
 
     // send approved message with link with code
+    await this.emailService.sendApproveEmail(user.login, link);
 
     return link;
   }
