@@ -4,14 +4,19 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { EmailController } from './email/email.controller';
-import { EmailService } from './email/email.service';
 import { EmailModule } from './email/email.module';
+import { CryptModule } from './crypt/crypt.module';
 
 @Module({
-  imports: [UsersModule, TypeOrmModule.forRoot(), AuthModule, EmailModule],
-  controllers: [AppController, EmailController],
-  providers: [AppService, EmailService],
+  imports: [
+    UsersModule,
+    TypeOrmModule.forRoot(),
+    AuthModule,
+    EmailModule,
+    CryptModule,
+  ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
 

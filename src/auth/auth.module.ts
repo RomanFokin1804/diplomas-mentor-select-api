@@ -6,12 +6,14 @@ import { Auth } from './entity/auth.entity';
 import { UsersModule } from 'src/users/users.module';
 import { ApprovedList } from './entity/approved-list.entity';
 import { EmailModule } from 'src/email/email.module';
+import { CryptModule } from 'src/crypt/crypt.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Auth, ApprovedList]),
     UsersModule,
     EmailModule,
+    CryptModule,
   ],
   exports: [TypeOrmModule],
   providers: [AuthService],

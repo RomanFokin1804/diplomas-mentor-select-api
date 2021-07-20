@@ -8,6 +8,8 @@ import { SignUpDto } from './dto/sign-up.dto';
 import { ApprovedList } from './entity/approved-list.entity';
 import { Auth } from './entity/auth.entity';
 import { EmailService } from 'src/email/email.service';
+import { CryptService } from 'src/crypt/crypt.service';
+const { cryptIv, cryptPassword } = require('../../config/crypt.config.json');
 
 @Injectable()
 export class AuthService {
@@ -18,19 +20,28 @@ export class AuthService {
     private approvedRepository: Repository<ApprovedList>,
     private usersService: UsersService,
     private emailService: EmailService,
+    private cryptService: CryptService,
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
+    // TODO add getMainUrl function
     const mainUrl = `http://localhost:${
       parseInt(process.env.PORT, 10) || 3000
     }`;
-    console.log(mainUrl);
+
+    // TODO validation
+
     // check existing login
     const exist = await this.usersService.getByLogin(signUpDto.login);
     if (exist)
       return { status: 'error', message: 'User with this login was existed' };
 
     // encrypt password
+    signUpDto.password = await this.cryptService.encrypt(
+      cryptPassword,
+      cryptIv,
+      signUpDto.password,
+    );
 
     // create user
     const user = await this.usersService.create(signUpDto);
@@ -45,9 +56,9 @@ export class AuthService {
     const link = `${mainUrl}/auth/approved?code=${code}`;
 
     // send approved message with link with code
-    await this.emailService.sendApproveEmail(user.login, link);
+    // await this.emailService.sendApproveEmail(user.login, link);
 
-    return link;
+    return { status: 'success', result: user.id };
   }
 
   async approvedFromEmail(code: string) {
