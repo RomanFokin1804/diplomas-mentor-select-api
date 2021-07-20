@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  UsePipes,
 } from '@nestjs/common';
 import { DeleteResult, UpdateResult } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -39,12 +40,7 @@ export class UsersController {
 
   @Post()
   create(@Body() createUserDto: CreateUserDto): Promise<User> {
-    try {
-      return this.usersService.create(createUserDto);
-    } catch (e) {
-      console.log(e);
-      return e;
-    }
+    return this.usersService.create(createUserDto);
   }
 
   @Delete(':id')
