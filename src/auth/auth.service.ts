@@ -9,6 +9,7 @@ import { ApprovedList } from './entity/approved-list.entity';
 import { Auth } from './entity/auth.entity';
 import { EmailService } from 'src/email/email.service';
 import { CryptService } from 'src/crypt/crypt.service';
+import { ApprovedCodeDto } from './dto/approved-code.dto';
 const { cryptIv, cryptPassword } = require('../../config/crypt.config.json');
 
 @Injectable()
@@ -24,56 +25,76 @@ export class AuthService {
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
-    // TODO add getMainUrl function
-    const mainUrl = `http://localhost:${
-      parseInt(process.env.PORT, 10) || 3000
-    }`;
+    try {
+      // TODO add getMainUrl function
+      const mainUrl = `http://localhost:${
+        parseInt(process.env.PORT, 10) || 3000
+      }`;
 
-    // TODO validation
+      // check existing login
+      const exist = await this.usersService.getByLogin(signUpDto.login);
+      if (exist)
+        return { status: 'error', message: 'User with this login was existed' };
 
-    // check existing login
-    const exist = await this.usersService.getByLogin(signUpDto.login);
-    if (exist)
-      return { status: 'error', message: 'User with this login was existed' };
+      // encrypt password
+      signUpDto.password = await this.cryptService.encrypt(
+        cryptPassword,
+        cryptIv,
+        signUpDto.password,
+      );
 
-    // encrypt password
-    signUpDto.password = await this.cryptService.encrypt(
-      cryptPassword,
-      cryptIv,
-      signUpDto.password,
-    );
+      // create user
+      const user = await this.usersService.create(signUpDto);
 
-    // create user
-    const user = await this.usersService.create(signUpDto);
+      // create code for approved
+      const code = Md5.hashStr(user.id);
 
-    // create code for approved
-    const code = Md5.hashStr(user.id);
+      // add user in non-approved entity
+      await this.approvedRepository.save({ userId: user.id, code });
 
-    // add user in non-approved entity
-    await this.approvedRepository.save({ userId: user.id, code });
+      // form link with code
+      const link = `${mainUrl}/auth/approved?code=${code}`;
+      console.log(link);
 
-    // form link with code
-    const link = `${mainUrl}/auth/approved?code=${code}`;
+      // send approved message with link with code
+      // await this.emailService.sendApproveEmail(user.login, link);
 
-    // send approved message with link with code
-    // await this.emailService.sendApproveEmail(user.login, link);
-
-    return { status: 'success', result: user.id };
+      return { status: 'success', result: user.id };
+    } catch (e) {
+      return { status: 'error', message: `Server error: ${e}` };
+    }
   }
 
-  async approvedFromEmail(code: string) {
-    return code;
-    // checked link
-    // create token
-    // remove user from non-approved entity
+  async approvedFromEmail(approvedCodeDto: ApprovedCodeDto) {
+    try {
+      // checked link
+      const exist = await this.approvedRepository.findOne({
+        code: approvedCodeDto.code,
+      });
+      if (!exist) {
+        return {
+          status: 'error',
+          message: 'User with this approved code not found!',
+        };
+      }
+
+      // remove user from non-approved entity
+      await this.approvedRepository.delete({ code: approvedCodeDto.code });
+      return { status: 'success', result: { message: 'Success approve' } };
+    } catch (e) {
+      return { status: 'error', message: `Server error: ${e}` };
+    }
   }
 
   async signIn(signInDto: SignInDto) {
-    console.log('Hello');
-    return 'Hello!';
     // check login
+
+    // check approved
+
     // check password
+
     // created token
+    return signInDto;
   }
 
   async me() {

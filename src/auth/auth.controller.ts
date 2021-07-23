@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { ApprovedCodeDto } from './dto/approved-code.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 
@@ -13,8 +14,8 @@ export class AuthController {
   }
 
   @Get('approved')
-  approvedFromEmail(@Query() code: string) {
-    return this.authService.approvedFromEmail(code);
+  approvedFromEmail(@Query() approvedCodeDto: ApprovedCodeDto) {
+    return this.authService.approvedFromEmail(approvedCodeDto);
   }
 
   @Post('sign-in')

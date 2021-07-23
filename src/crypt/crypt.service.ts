@@ -16,7 +16,7 @@ export class CryptService {
     return encryptText;
   }
 
-  async decrypt(password, iv, text): Promise<string> {
+  async decrypt(password: string, iv: string, text: string): Promise<string> {
     const key = (await promisify(scrypt)(password, 'salt', 32)) as Buffer;
     const decipher = createDecipheriv('aes-256-cbc', key, iv);
     const decryptText = Buffer.concat([
