@@ -88,12 +88,31 @@ export class AuthService {
 
   async signIn(signInDto: SignInDto) {
     // check login
+    const exist = await this.usersService.getByLogin(signInDto.login);
+    if (!exist) {
+      return { status: 'error', message: 'User with this login not existed' };
+    }
 
     // check approved
+    const existInApprovedList = await this.approvedRepository.findOne({
+      userId: exist.id,
+    });
+    if (existInApprovedList) {
+      return { status: 'error', message: 'User with this login not approved' };
+    }
 
     // check password
+    const decryptPassword = await this.cryptService.decrypt(
+      cryptPassword,
+      cryptIv,
+      exist.password,
+    );
+    if (signInDto.password !== decryptPassword) {
+      return { status: 'error', message: 'Password does not match' };
+    }
 
-    // created token
+    // TODO created token
+
     return signInDto;
   }
 
