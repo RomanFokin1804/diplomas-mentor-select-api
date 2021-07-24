@@ -116,19 +116,22 @@ export class AuthService {
 
     // create token
     const payload = { login: exist.login, sub: exist.id };
+
     const access_token = this.jwtService.sign(payload, {
       secret: jwtConstants.secretAccess,
-      expiresIn: '60m',
+      expiresIn: jwtConstants.expiresInAccess,
     });
+
     const refresh_token = this.jwtService.sign(payload, {
       secret: jwtConstants.secretRefresh,
-      expiresIn: '24h',
+      expiresIn: jwtConstants.expiresInRefresh,
     });
 
     return { status: 'success', result: { access_token, refresh_token } };
   }
 
-  async me() {
+  async me(req) {
     // check token
+    return req.user;
   }
 }
