@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { Md5 } from 'ts-md5';
-import { UsersService } from 'src/users/users.service';
 import { Repository } from 'typeorm';
+import { UsersService } from 'src/users/users.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { ApprovedList } from './entity/approved-list.entity';
@@ -13,6 +13,7 @@ import { CryptService } from 'src/crypt/crypt.service';
 import { ApprovedCodeDto } from './dto/approved-code.dto';
 import { jwtConstants } from 'config/jwt.config';
 import { cryptConstants } from 'config/crypt.config';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Injectable()
 export class AuthService {
@@ -115,23 +116,90 @@ export class AuthService {
     }
 
     // create token
-    const payload = { login: exist.login, sub: exist.id };
+    const payload = { sub: exist.id };
 
-    const access_token = this.jwtService.sign(payload, {
-      secret: jwtConstants.secretAccess,
-      expiresIn: jwtConstants.expiresInAccess,
+    const accessToken = await this.createToken(
+      payload,
+      jwtConstants.secretAccess,
+      jwtConstants.expiresInAccess,
+    );
+
+    const refreshToken = await this.createToken(
+      payload,
+      jwtConstants.secretRefresh,
+      jwtConstants.expiresInRefresh,
+    );
+
+    // save tokens
+    await this.authRepository.save({
+      userId: exist.id,
+      accessToken,
+      refreshToken,
     });
 
-    const refresh_token = this.jwtService.sign(payload, {
-      secret: jwtConstants.secretRefresh,
-      expiresIn: jwtConstants.expiresInRefresh,
-    });
-
-    return { status: 'success', result: { access_token, refresh_token } };
+    return { status: 'success', result: { accessToken, refreshToken } };
   }
 
   async me(req) {
     // check token
-    return req.user;
+    return { status: 'success', result: req.user };
+  }
+
+  async replaceTokens(refreshTokenDto: RefreshTokenDto) {
+    // without this transformations it`s not worked :(
+    const decodedToken = JSON.parse(
+      JSON.stringify(
+        await this.jwtService.decode(refreshTokenDto.refreshToken),
+      ),
+    );
+
+    const existToken = await this.authRepository.findOne({
+      refreshToken: refreshTokenDto.refreshToken,
+    });
+    if (!existToken) {
+      return { status: 'error', message: 'Incorrect token' };
+    }
+
+    const timeNow = Date.now();
+
+    if (decodedToken.exp * 1000 < timeNow) {
+      await this.authRepository.delete({
+        refreshToken: refreshTokenDto.refreshToken,
+      });
+      return { status: 'error', message: 'Incorrect token' };
+    }
+
+    const user = await this.usersService.getById(decodedToken.sub);
+    if (!user) {
+      await this.authRepository.delete({
+        refreshToken: refreshTokenDto.refreshToken,
+      });
+      return { status: 'error', message: 'Incorrect token' };
+    }
+
+    const payload = { sub: user.id };
+
+    const accessToken = await this.createToken(
+      payload,
+      jwtConstants.secretAccess,
+      jwtConstants.expiresInAccess,
+    );
+
+    const refreshToken = await this.createToken(
+      payload,
+      jwtConstants.secretRefresh,
+      jwtConstants.expiresInRefresh,
+    );
+
+    await this.authRepository.update(existToken.id, {
+      accessToken,
+      refreshToken,
+    });
+
+    return { status: 'success', result: { accessToken, refreshToken } };
+  }
+
+  async createToken(payload, secret, expiresIn) {
+    return this.jwtService.sign(payload, { secret, expiresIn });
   }
 }

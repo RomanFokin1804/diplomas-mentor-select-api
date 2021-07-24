@@ -12,7 +12,7 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async getAll(): Promise<User[]> {
+  /* async getAll(): Promise<User[]> {
     try {
       const res = await this.usersRepository.find();
       console.log(res);
@@ -21,12 +21,11 @@ export class UsersService {
       console.log(e);
       return e;
     }
-  }
+  } */
 
   async getById(id: string): Promise<User> {
     try {
       const res = await this.usersRepository.findOne(id);
-      console.log(res);
       return res;
     } catch (e) {
       console.log(e);
@@ -37,7 +36,6 @@ export class UsersService {
   async create(createUserDto: CreateUserDto): Promise<User> {
     try {
       const res = await this.usersRepository.save(createUserDto);
-      // console.log(res);
       return res;
     } catch (e) {
       console.log(e);
@@ -45,42 +43,35 @@ export class UsersService {
     }
   }
 
-  async update(
+  /* async update(
     id: string,
     updateUserDto: UpdateUserDto,
   ): Promise<UpdateResult> {
     try {
       const res = await this.usersRepository.update(id, updateUserDto);
-      console.log(res);
       return res;
     } catch (e) {
       console.log(e);
       return e;
     }
-  }
+  } */
 
-  async remove(id: string): Promise<DeleteResult> {
+  /* async remove(id: string): Promise<DeleteResult> {
     try {
       const res = await this.usersRepository.delete(id);
-      console.log(res);
       return res;
     } catch (e) {
       console.log(e);
       return e;
     }
-  }
+  } */
 
   async getByLogin(login: string): Promise<User> {
     try {
       const res = await this.usersRepository.findOne({ login });
-      console.log(res);
       return res;
     } catch (e) {
       console.log(e);
     }
   }
-
-  /*async signUp(createUserDto: CreateUserDto): Promise<User> {
-
-  }*/
 }

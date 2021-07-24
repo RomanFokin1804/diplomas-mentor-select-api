@@ -18,7 +18,7 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get()
+  /* @Get()
   getAll(): Promise<User[]> {
     try {
       return this.usersService.getAll();
@@ -26,9 +26,9 @@ export class UsersController {
       console.log(e);
       return e;
     }
-  }
+  } */
 
-  @Get(':id')
+  /* @Get(':id')
   getById(@Param('id') id: string): Promise<User> {
     try {
       return this.usersService.getById(id);
@@ -36,14 +36,14 @@ export class UsersController {
       console.log(e);
       return e;
     }
-  }
+  } */
 
-  @Post()
+  /* @Post()
   create(@Body() createUserDto: CreateUserDto): Promise<User> {
     return this.usersService.create(createUserDto);
-  }
+  } */
 
-  @Delete(':id')
+  /* @Delete(':id')
   remove(@Param('id') id: string): Promise<DeleteResult> {
     try {
       return this.usersService.remove(id);
@@ -51,9 +51,9 @@ export class UsersController {
       console.log(e);
       return e;
     }
-  }
+  } */
 
-  @Put(':id')
+  /* @Put(':id')
   update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -64,5 +64,5 @@ export class UsersController {
       console.log(e);
       return e;
     }
-  }
+  } */
 }

@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApprovedCodeDto } from './dto/approved-code.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -36,5 +37,10 @@ export class AuthController {
   @Get('me')
   me(@Request() req) {
     return this.authService.me(req);
+  }
+
+  @Post('replace-tokens')
+  replaceTokens(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.replaceTokens(refreshTokenDto);
   }
 }
