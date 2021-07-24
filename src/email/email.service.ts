@@ -1,6 +1,6 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
-const emailConfig = require('../../config/email.config.json');
+import { emailConstants } from 'config/email.config';
 
 @Injectable()
 export class EmailService {
@@ -9,7 +9,7 @@ export class EmailService {
   async sendApproveEmail(to: string, link: string) {
     try {
       const res = await this.mailerService.sendMail({
-        from: `${emailConfig.from}`,
+        from: `${emailConstants.from}`,
         to: to,
         // cc: cc,
         // bcc: bcc,

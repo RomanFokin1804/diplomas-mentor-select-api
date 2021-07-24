@@ -7,6 +7,7 @@ import { UsersModule } from 'src/users/users.module';
 import { ApprovedList } from './entity/approved-list.entity';
 import { EmailModule } from 'src/email/email.module';
 import { CryptModule } from 'src/crypt/crypt.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { CryptModule } from 'src/crypt/crypt.module';
     UsersModule,
     EmailModule,
     CryptModule,
+    JwtModule.register({}),
   ],
   exports: [TypeOrmModule],
   providers: [AuthService],

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { JwtService } from '@nestjs/jwt';
 import { Md5 } from 'ts-md5';
 import { UsersService } from 'src/users/users.service';
 import { Repository } from 'typeorm';
@@ -10,7 +11,8 @@ import { Auth } from './entity/auth.entity';
 import { EmailService } from 'src/email/email.service';
 import { CryptService } from 'src/crypt/crypt.service';
 import { ApprovedCodeDto } from './dto/approved-code.dto';
-const { cryptIv, cryptPassword } = require('../../config/crypt.config.json');
+import { jwtConstants } from 'config/jwt.config';
+import { cryptConstants } from 'config/crypt.config';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +24,7 @@ export class AuthService {
     private usersService: UsersService,
     private emailService: EmailService,
     private cryptService: CryptService,
+    private jwtService: JwtService,
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
@@ -38,8 +41,8 @@ export class AuthService {
 
       // encrypt password
       signUpDto.password = await this.cryptService.encrypt(
-        cryptPassword,
-        cryptIv,
+        cryptConstants.password,
+        cryptConstants.iv,
         signUpDto.password,
       );
 
@@ -103,17 +106,26 @@ export class AuthService {
 
     // check password
     const decryptPassword = await this.cryptService.decrypt(
-      cryptPassword,
-      cryptIv,
+      cryptConstants.password,
+      cryptConstants.iv,
       exist.password,
     );
     if (signInDto.password !== decryptPassword) {
       return { status: 'error', message: 'Password does not match' };
     }
 
-    // TODO created token
+    // create token
+    const payload = { login: exist.login, sub: exist.id };
+    const access_token = this.jwtService.sign(payload, {
+      secret: jwtConstants.secretAccess,
+      expiresIn: '60m',
+    });
+    const refresh_token = this.jwtService.sign(payload, {
+      secret: jwtConstants.secretRefresh,
+      expiresIn: '24h',
+    });
 
-    return signInDto;
+    return { status: 'success', result: { access_token, refresh_token } };
   }
 
   async me() {
