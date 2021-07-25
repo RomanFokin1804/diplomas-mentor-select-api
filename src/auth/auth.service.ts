@@ -35,28 +35,22 @@ export class AuthService {
         parseInt(process.env.PORT, 10) || 3000
       }`;
 
-      // check existing login
-      const exist = await this.usersService.getByLogin(signUpDto.login);
-      if (exist)
+      const existUser = await this.usersService.getByLogin(signUpDto.login);
+      if (existUser)
         return { status: 'error', message: 'User with this login was existed' };
 
-      // encrypt password
       signUpDto.password = await this.cryptService.encrypt(
         cryptConstants.password,
         cryptConstants.iv,
         signUpDto.password,
       );
 
-      // create user
       const user = await this.usersService.create(signUpDto);
 
-      // create code for approved
       const code = Md5.hashStr(user.id);
 
-      // add user in non-approved entity
       await this.approvedRepository.save({ userId: user.id, code });
 
-      // form link with code
       const link = `${mainUrl}/auth/approved?code=${code}`;
       console.log(link);
 
@@ -71,11 +65,10 @@ export class AuthService {
 
   async approvedFromEmail(approvedCodeDto: ApprovedCodeDto) {
     try {
-      // checked link
-      const exist = await this.approvedRepository.findOne({
+      const existCode = await this.approvedRepository.findOne({
         code: approvedCodeDto.code,
       });
-      if (!exist) {
+      if (!existCode) {
         return {
           status: 'error',
           message: 'User with this approved code not found!',
@@ -91,15 +84,14 @@ export class AuthService {
   }
 
   async signIn(signInDto: SignInDto) {
-    // check login
-    const exist = await this.usersService.getByLogin(signInDto.login);
-    if (!exist) {
+    const existUser = await this.usersService.getByLogin(signInDto.login);
+    if (!existUser) {
       return { status: 'error', message: 'User with this login not existed' };
     }
 
     // check approved
     const existInApprovedList = await this.approvedRepository.findOne({
-      userId: exist.id,
+      userId: existUser.id,
     });
     if (existInApprovedList) {
       return { status: 'error', message: 'User with this login not approved' };
@@ -109,14 +101,14 @@ export class AuthService {
     const decryptPassword = await this.cryptService.decrypt(
       cryptConstants.password,
       cryptConstants.iv,
-      exist.password,
+      existUser.password,
     );
     if (signInDto.password !== decryptPassword) {
       return { status: 'error', message: 'Password does not match' };
     }
 
     // create token
-    const payload = { sub: exist.id };
+    const payload = { sub: existUser.id };
 
     const accessToken = await this.createToken(
       payload,
@@ -132,7 +124,7 @@ export class AuthService {
 
     // save tokens
     await this.authRepository.save({
-      userId: exist.id,
+      userId: existUser.id,
       accessToken,
       refreshToken,
     });
@@ -143,6 +135,22 @@ export class AuthService {
   async me(req) {
     // check token
     return { status: 'success', result: req.user };
+  }
+
+  async logout(req) {
+    if (req?.headers?.authorization?.slice(0, 6) !== 'Bearer') {
+      return { status: 'error', message: 'Incorrect token' };
+    }
+
+    const accessToken = req.headers.authorization.slice(7);
+    const existToken = await this.authRepository.findOne({ accessToken });
+    if (!existToken) {
+      return { status: 'error', message: 'Incorrect token' };
+    }
+
+    await this.authRepository.delete({ accessToken });
+
+    return { status: 'success', result: true };
   }
 
   async replaceTokens(refreshTokenDto: RefreshTokenDto) {
