@@ -36,8 +36,9 @@ export class AuthService {
       }`;
 
       const existUser = await this.usersService.getByLogin(signUpDto.login);
-      if (existUser)
+      if (existUser) {
         return { status: 'error', message: 'User with this login was existed' };
+      }
 
       signUpDto.password = await this.cryptService.encrypt(
         cryptConstants.password,
@@ -139,7 +140,7 @@ export class AuthService {
 
   async logout(req) {
     if (req?.headers?.authorization?.slice(0, 6) !== 'Bearer') {
-      return { status: 'error', message: 'Incorrect token' };
+      return { status: 'error', message: 'Not bearer token' };
     }
 
     const accessToken = req.headers.authorization.slice(7);
